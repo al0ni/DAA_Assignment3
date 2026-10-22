@@ -1,0 +1,23 @@
+Verification: 23 October 2026
+Runtime: Java 25.0.1, compiled with Java 17 release target
+
+Maven test: BUILD SUCCESS
+JUnit 5: 10 tests, 0 failures, 0 errors, 0 skipped
+
+Main benchmark: 50 data rows, 5 runs per algorithm and graph
+All 10 MST reference values match for both Kruskal and Prim
+All 10 SCC reference counts match
+All 10 DAG distance sums match
+All required scan identities match: Kosaraju 2m, Kahn m, DAG relaxation m
+All returned benchmark topological orders validated
+Results and counters agree between all five runs
+
+Bonus benchmark: 10 graph pairs checked
+Tarjan and Kosaraju partitions agree on every benchmark graph
+Tarjan scans m edges, Kosaraju scans 2m
+Every condensation graph passes topological validation
+Critical path weights and restored SCC-ID paths are in bonus.csv
+
+Report: 5 PDF pages, all pages rendered and visually inspected
+Plots: 3 PNG charts derived from results.csv
+Java source comments: none
