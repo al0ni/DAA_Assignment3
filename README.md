@@ -84,7 +84,7 @@ git clone git-history.bundle city-network
 cd city-network
 git remote set-url origin https://github.com/YOUR_ACCOUNT/YOUR_REPOSITORY.git
 git push -u origin main
-git push origin --all
+git push origin 'refs/remotes/origin/feature/*:refs/heads/feature/*'
 git push origin v1.0
 ```
 
