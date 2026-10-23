@@ -76,15 +76,7 @@ The script also prints the ratios and slopes from the report.
 
 ## Git history
 
-The project has main and the five required feature branches, with the final version tagged v1.0. The history is also saved in git-history.bundle.
-
-To restore it:
-
-```sh
-git clone git-history.bundle city-network
-```
-
-The repository still needs to be published to GitHub before submission.
+The branches are main, feature/dsu, feature/mst, feature/scc, feature/paths and feature/metrics. The release tag is v1.0.
 
 ## AI use
 
