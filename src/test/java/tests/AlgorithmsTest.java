@@ -84,9 +84,13 @@ public class AlgorithmsTest {
         long total = 0;
         for (Edge edge : tree.edges) {
             assertTrue(dsu.union(edge.from, edge.to));
-            assertTrue(graph.edges.stream().anyMatch(e -> e.weight == edge.weight &&
-                    ((e.from == edge.from && e.to == edge.to) ||
-                     (e.from == edge.to && e.to == edge.from))));
+            boolean exists = false;
+            for (Edge original : graph.edges) {
+                boolean same = original.from == edge.from && original.to == edge.to;
+                boolean reverse = original.from == edge.to && original.to == edge.from;
+                if (original.weight == edge.weight && (same || reverse)) exists = true;
+            }
+            assertTrue(exists);
             total += edge.weight;
         }
         assertEquals(tree.weight, total);
@@ -274,8 +278,13 @@ public class AlgorithmsTest {
             for (int i = 1; i < path.size(); i++) {
                 int from = path.get(i - 1);
                 int to = path.get(i);
-                assertTrue(graph.adj.get(from).stream().anyMatch(e -> e.to == to &&
-                        paths.distance[from] + e.weight == paths.distance[to]));
+                boolean exists = false;
+                for (Edge edge : graph.adj.get(from)) {
+                    if (edge.to == to && paths.distance[from] + edge.weight == paths.distance[to]) {
+                        exists = true;
+                    }
+                }
+                assertTrue(exists);
             }
         }
     }
@@ -312,7 +321,11 @@ public class AlgorithmsTest {
         parallel.addEdge(1, 2, -3);
         Graph reduced = Condensation.build(parallel, SCC.tarjan(parallel, new Metrics()));
         assertEquals(2, reduced.edges.size());
-        assertEquals(8, Arrays.stream(DagPaths.longest(reduced, new Metrics()).distance).max().orElseThrow());
+        long maximum = Long.MIN_VALUE;
+        for (long distance : DagPaths.longest(reduced, new Metrics()).distance) {
+            maximum = Math.max(maximum, distance);
+        }
+        assertEquals(8, maximum);
     }
 
     @Test

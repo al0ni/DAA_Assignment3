@@ -1,5 +1,4 @@
 import csv
-import json
 import math
 from pathlib import Path
 from reportlab.graphics.shapes import Drawing, String, Line
@@ -85,19 +84,24 @@ plot("operations.png", "Counted operations vs graph size", "Composite work = edg
 plot("scans_per_edge.png", "Edge scans per input edge", "Prim and Kosaraju overlap at 2; Kahn and DAG relaxation overlap at 1", "edge_scans / m", selected, lambda r: r["edge_scans"] / r["m"], False)
 plot("kruskal_share.png", "Share of edges examined by Kruskal", "Sorting still processes the entire edge list before the early stop", "edge_scans / m", [("Kruskal", "sparse"), ("Kruskal", "dense")], lambda r: r["edge_scans"] / r["m"], False)
 
-summary = {}
+print("Algorithm,density,normalized_min,normalized_max,scan_slope,work_slope,comparison_slope,dsu_min,dsu_max")
 for algorithm in algorithms:
     for density in ("sparse", "dense"):
         group = series(algorithm, density)
-        work = [r["operations"] for r in group]
-        summary[algorithm + "_" + density] = {
-            "scan_slope": slope([(r["n"], r["edge_scans"]) for r in group]),
-            "operations_slope": slope([(r["n"], r["operations"]) for r in group]),
-            "comparisons_slope": slope([(r["n"], r["comparisons"]) for r in group]) if group[0]["comparisons"] else None,
-            "scans_per_edge": [r["edge_scans"] / r["m"] for r in group],
-            "dsu_per_edge": [r["dsu_ops"] / r["m"] for r in group],
-            "normalized_work": [w / (r["m"] * math.log2(r["m"])) if algorithm in ("Kruskal", "Prim") else w / (r["n"] + r["m"]) for w, r in zip(work, group)],
-            "time_ms": [r["time_ms"] for r in group],
-        }
-(root / "results/analysis.json").write_text(json.dumps(summary, indent=2) + "\n")
-print(json.dumps(summary, indent=2))
+        normalized = []
+        dsu_ratio = []
+        for row in group:
+            if algorithm in ("Kruskal", "Prim"):
+                divisor = row["m"] * math.log2(row["m"])
+            else:
+                divisor = row["n"] + row["m"]
+            normalized.append(row["operations"] / divisor)
+            dsu_ratio.append(row["dsu_ops"] / row["m"])
+        scan_slope = slope([(r["n"], r["edge_scans"]) for r in group])
+        work_slope = slope([(r["n"], r["operations"]) for r in group])
+        comparison_slope = 0
+        if group[0]["comparisons"] > 0:
+            comparison_slope = slope([(r["n"], r["comparisons"]) for r in group])
+        print(f"{algorithm},{density},{min(normalized):.3f},{max(normalized):.3f},"
+              f"{scan_slope:.3f},{work_slope:.3f},{comparison_slope:.3f},"
+              f"{min(dsu_ratio):.3f},{max(dsu_ratio):.3f}")

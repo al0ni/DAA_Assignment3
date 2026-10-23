@@ -13,8 +13,7 @@ import java.nio.file.Path;
 public class BonusBenchmark {
     public static void main(String[] args) throws Exception {
         Files.createDirectories(Path.of("results"));
-        Path temporary = Path.of("results/bonus.pending.csv");
-        try (PrintWriter csv = new PrintWriter(Files.newBufferedWriter(temporary))) {
+        try (PrintWriter csv = new PrintWriter(Files.newBufferedWriter(Path.of("results/bonus.csv")))) {
             csv.println("n,m,kosaraju_scans,tarjan_scans,scc_count,condensation_edges,critical_weight,critical_path");
             for (int n : Benchmark.SIZES) {
                 for (int density : new int[]{4, 20}) {
@@ -43,7 +42,5 @@ public class BonusBenchmark {
                 }
             }
         }
-        Files.move(temporary, Path.of("results/bonus.csv"),
-                java.nio.file.StandardCopyOption.REPLACE_EXISTING);
     }
 }

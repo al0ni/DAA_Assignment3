@@ -19,18 +19,9 @@ public class DagPaths {
     }
 
     public static DagPaths shortest(Graph graph, Metrics metrics) {
-        return solve(graph, false, metrics);
-    }
-
-    public static DagPaths longest(Graph graph, Metrics metrics) {
-        return solve(graph, true, metrics);
-    }
-
-    private static DagPaths solve(Graph graph, boolean longest, Metrics metrics) {
         int[] order = Topological.kahn(graph, new Metrics());
         DagPaths result = new DagPaths(graph.n);
-        long infinity = longest ? Long.MIN_VALUE : Long.MAX_VALUE;
-        Arrays.fill(result.distance, infinity);
+        Arrays.fill(result.distance, Long.MAX_VALUE);
         int[] degree = graph.indegrees();
         for (int i = 0; i < graph.n; i++) {
             if (degree[i] == 0) result.distance[i] = 0;
@@ -39,8 +30,28 @@ public class DagPaths {
             for (Edge edge : graph.adj.get(vertex)) {
                 metrics.edgeScans++;
                 long candidate = result.distance[vertex] + edge.weight;
-                if ((longest && candidate > result.distance[edge.to]) ||
-                        (!longest && candidate < result.distance[edge.to])) {
+                if (candidate < result.distance[edge.to]) {
+                    result.distance[edge.to] = candidate;
+                    result.parent[edge.to] = vertex;
+                }
+            }
+        }
+        return result;
+    }
+
+    public static DagPaths longest(Graph graph, Metrics metrics) {
+        int[] order = Topological.kahn(graph, new Metrics());
+        DagPaths result = new DagPaths(graph.n);
+        Arrays.fill(result.distance, Long.MIN_VALUE);
+        int[] degree = graph.indegrees();
+        for (int i = 0; i < graph.n; i++) {
+            if (degree[i] == 0) result.distance[i] = 0;
+        }
+        for (int vertex : order) {
+            for (Edge edge : graph.adj.get(vertex)) {
+                metrics.edgeScans++;
+                long candidate = result.distance[vertex] + edge.weight;
+                if (candidate > result.distance[edge.to]) {
                     result.distance[edge.to] = candidate;
                     result.parent[edge.to] = vertex;
                 }

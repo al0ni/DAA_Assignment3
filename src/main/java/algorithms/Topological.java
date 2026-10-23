@@ -21,7 +21,8 @@ public class Topological {
             order[size++] = vertex;
             for (Edge edge : graph.adj.get(vertex)) {
                 metrics.edgeScans++;
-                if (--degree[edge.to] == 0) queue.add(edge.to);
+                degree[edge.to]--;
+                if (degree[edge.to] == 0) queue.add(edge.to);
             }
         }
         if (size != graph.n) throw new IllegalArgumentException("Graph has a cycle");

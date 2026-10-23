@@ -23,19 +23,41 @@ public class Benchmark {
         {15012094, 3923, 40096539}, {3056681, 1, 23512087}
     };
 
-    private interface Task {
-        long run(Metrics metrics);
+    private static long runAlgorithm(String name, Graph graph, Metrics metrics) {
+        if (name.equals("Kruskal") || name.equals("Prim")) {
+            MST tree;
+            if (name.equals("Kruskal")) {
+                tree = MST.kruskal(graph, metrics);
+            } else {
+                tree = MST.prim(graph, metrics);
+            }
+            check(tree.components == 1, "Generated graph must be connected");
+            check(tree.edges.size() == graph.n - 1, "Wrong tree size");
+            return tree.weight;
+        }
+        if (name.equals("Kosaraju")) {
+            return SCC.kosaraju(graph, metrics).count;
+        }
+        if (name.equals("Kahn")) {
+            int[] order = Topological.kahn(graph, metrics);
+            check(Topological.valid(graph, order), "Invalid topological order");
+            return order.length;
+        }
+        if (name.equals("DagShortestPath")) {
+            return DagPaths.shortest(graph, metrics).sum();
+        }
+        throw new IllegalArgumentException("Unknown algorithm");
     }
 
     private static long measure(PrintWriter csv, String algorithm, String kind,
-                                Graph graph, Task task, long expectedScans) {
+                                Graph graph, long expectedScans) {
         double[] times = new double[5];
         long result = 0;
         Metrics first = null;
         for (int run = 0; run < 5; run++) {
             Metrics metrics = new Metrics();
             long start = System.nanoTime();
-            long value = task.run(metrics);
+            long value = runAlgorithm(algorithm, graph, metrics);
             times[run] = (System.nanoTime() - start) / 1_000_000.0;
             if (run == 0) {
                 result = value;
@@ -63,42 +85,26 @@ public class Benchmark {
         if (!condition) throw new IllegalStateException(message);
     }
 
-    public static void run(boolean small) throws IOException {
+    public static void run() throws IOException {
         Files.createDirectories(Path.of("results"));
-        Path temporary = Path.of("results/results.pending.csv");
         int index = 0;
-        try (PrintWriter csv = new PrintWriter(Files.newBufferedWriter(temporary))) {
+        try (PrintWriter csv = new PrintWriter(Files.newBufferedWriter(Path.of("results/results.csv")))) {
             csv.println("algorithm,graph,n,m,time_ms,dsu_ops,edge_scans,comparisons,max_depth,result");
             System.out.println("n,m,mst,scc,dag_sum,reference");
             for (int n : SIZES) {
-                if (small && n != 1000) break;
                 for (int density : new int[]{4, 20}) {
                     int m = density * n;
                     String label = density == 4 ? "sparse" : "dense";
                     Graph roads = Generator.generate(n, m, "undirected");
-                    long kruskal = measure(csv, "Kruskal", "undirected_" + label, roads, metrics -> {
-                        MST tree = MST.kruskal(roads, metrics);
-                        check(tree.components == 1 && tree.edges.size() == n - 1, "Invalid MST");
-                        return tree.weight;
-                    }, -1);
-                    long prim = measure(csv, "Prim", "undirected_" + label, roads, metrics -> {
-                        MST tree = MST.prim(roads, metrics);
-                        check(tree.components == 1 && tree.edges.size() == n - 1, "Invalid MST");
-                        return tree.weight;
-                    }, 2L * m);
+                    long kruskal = measure(csv, "Kruskal", "undirected_" + label, roads, -1);
+                    long prim = measure(csv, "Prim", "undirected_" + label, roads, 2L * m);
                     check(kruskal == prim, "Kruskal and Prim disagree");
                     Graph directed = Generator.generate(n, m, "directed");
-                    long scc = measure(csv, "Kosaraju", "directed_" + label, directed,
-                            metrics -> SCC.kosaraju(directed, metrics).count, 2L * m);
+                    long scc = measure(csv, "Kosaraju", "directed_" + label, directed, 2L * m);
                     Graph dag = Generator.generate(n, m, "dag");
-                    long ordered = measure(csv, "Kahn", "dag_" + label, dag, metrics -> {
-                        int[] order = Topological.kahn(dag, metrics);
-                        check(Topological.valid(dag, order), "Invalid topological order");
-                        return order.length;
-                    }, m);
+                    long ordered = measure(csv, "Kahn", "dag_" + label, dag, m);
                     check(ordered == n, "Missing vertices");
-                    long sum = measure(csv, "DagShortestPath", "dag_" + label, dag,
-                            metrics -> DagPaths.shortest(dag, metrics).sum(), m);
+                    long sum = measure(csv, "DagShortestPath", "dag_" + label, dag, m);
                     long[] reference = REFERENCES[index++];
                     check(kruskal == reference[0] && scc == reference[1] && sum == reference[2],
                             "Reference mismatch at " + n + "/" + m + ": " +
@@ -107,7 +113,5 @@ public class Benchmark {
                 }
             }
         }
-        Path output = Path.of(small ? "results/quick.csv" : "results/results.csv");
-        Files.move(temporary, output, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
     }
 }

@@ -31,15 +31,18 @@ public class SCC {
             while (depth > 0) {
                 int vertex = stack[depth - 1];
                 if (next[vertex] < graph.adj.get(vertex).size()) {
-                    Edge edge = graph.adj.get(vertex).get(next[vertex]++);
+                    Edge edge = graph.adj.get(vertex).get(next[vertex]);
+                    next[vertex]++;
                     metrics.edgeScans++;
                     if (!visited[edge.to]) {
                         visited[edge.to] = true;
-                        stack[depth++] = edge.to;
+                        stack[depth] = edge.to;
+                        depth++;
                         metrics.depth(depth);
                     }
                 } else {
-                    order[finished++] = vertex;
+                    order[finished] = vertex;
+                    finished++;
                     depth--;
                 }
             }
@@ -56,12 +59,14 @@ public class SCC {
             component[start] = count;
             metrics.depth(depth);
             while (depth > 0) {
-                int vertex = stack[--depth];
+                depth--;
+                int vertex = stack[depth];
                 for (Edge edge : reversed.adj.get(vertex)) {
                     metrics.edgeScans++;
                     if (component[edge.to] == -1) {
                         component[edge.to] = count;
-                        stack[depth++] = edge.to;
+                        stack[depth] = edge.to;
+                        depth++;
                         metrics.depth(depth);
                     }
                 }
@@ -92,22 +97,30 @@ public class SCC {
             if (index[start] != -1) continue;
             int depth = 1;
             stack[0] = start;
-            index[start] = low[start] = time++;
-            active[activeSize++] = start;
+            index[start] = time;
+            low[start] = time;
+            time++;
+            active[activeSize] = start;
+            activeSize++;
             onStack[start] = true;
             metrics.depth(depth);
             while (depth > 0) {
                 int vertex = stack[depth - 1];
                 if (next[vertex] < graph.adj.get(vertex).size()) {
-                    Edge edge = graph.adj.get(vertex).get(next[vertex]++);
+                    Edge edge = graph.adj.get(vertex).get(next[vertex]);
+                    next[vertex]++;
                     metrics.edgeScans++;
                     int to = edge.to;
                     if (index[to] == -1) {
                         parent[to] = vertex;
-                        index[to] = low[to] = time++;
-                        active[activeSize++] = to;
+                        index[to] = time;
+                        low[to] = time;
+                        time++;
+                        active[activeSize] = to;
+                        activeSize++;
                         onStack[to] = true;
-                        stack[depth++] = to;
+                        stack[depth] = to;
+                        depth++;
                         metrics.depth(depth);
                     } else if (onStack[to]) {
                         low[vertex] = Math.min(low[vertex], index[to]);
@@ -121,7 +134,8 @@ public class SCC {
                     if (low[vertex] == index[vertex]) {
                         int to;
                         do {
-                            to = active[--activeSize];
+                            activeSize--;
+                            to = active[activeSize];
                             onStack[to] = false;
                             component[to] = count;
                         } while (to != vertex);
