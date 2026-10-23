@@ -1,18 +1,30 @@
 # City Network & Job Scheduler
 
-Alua Rakhimzhanova, SE-2509. DAA Assignment 3.
+Alua Rakhimzhanova
+SE-2509
+DAA Assignment 3
 
-## Run
+## About
 
-Install Java 17 or newer and Maven. Open a terminal in this folder.
+This is my third assignment for DAA. The project works with road networks and job dependencies.
 
-Build the code and run the JUnit tests:
+I used Kruskal and Prim to find a minimum spanning forest, Kosaraju to find strongly connected components, and Kahn to find a topological order. The project also finds shortest paths in a DAG and restores the paths using a parent array.
+
+For the bonus tasks, I added Tarjan, a condensation graph and a longest path in that graph.
+
+The graph uses an adjacency list and supports directed and undirected edges. DFS uses a stack instead of recursion so it can handle 100,000 vertices. Total weights and distances use long.
+
+## How to run
+
+Java 17 or newer and Maven are required. Run the commands from the project folder.
+
+Build the project and run the tests:
 
 ```sh
 mvn test
 ```
 
-Run the small graphs:
+Run the examples:
 
 ```sh
 java -cp target/classes benchmark.Main data/disconnected.txt
@@ -20,54 +32,60 @@ java -cp target/classes benchmark.Main data/cyclic.txt
 java -cp target/classes benchmark.Main data/dag.txt
 ```
 
-Run the full benchmark and the bonus checks:
+Run the main benchmark:
 
 ```sh
 java -Xmx3g -cp target/classes benchmark.Main benchmark
+```
+
+Run the bonus checks:
+
+```sh
 java -Xmx2g -cp target/classes benchmark.BonusBenchmark
 ```
 
-The main benchmark writes 50 rows to `results/results.csv`. Each time is the median of five runs. It automatically checks the reference values, MST agreement, topological orders and scan counts. An incorrect result stops the program with an error. The bonus results are in `results/bonus.csv`.
+## Tests and results
 
-## Files
+The tests compare DSU with a simple reference, MSTs with each other and brute force, SCCs with BFS reachability, and DAG paths with Bellman-Ford. They also check disconnected graphs, self-loops, parallel edges, negative weights and a path with 100,000 vertices.
 
-- `src/main/java/graph`: graph and edge classes.
-- `src/main/java/algorithms`: DSU, Kruskal, Prim, Kosaraju, Tarjan, Kahn, DAG paths and condensation.
-- `src/main/java/metrics`: operation counters.
-- `src/main/java/benchmark`: generator, examples and benchmarks.
-- `src/test/java/tests`: JUnit 5 tests.
-- `data`: three small input graphs.
-- `results`: CSV results and three PNG plots.
-- `REPORT.pdf`: five-page report with explanations and measured results.
+The benchmark uses Random(42), five graph sizes and two densities. Each algorithm runs five times, and the CSV stores the median time. It checks the reference values automatically and stops with an error if a result is wrong.
 
-The graph algorithms use loops, arrays, lists, a queue and a priority queue. DFS is iterative because the assignment requires 100,000 vertices. Distances and total weights use `long` to avoid integer overflow.
+All ten reference rows match. The main results are in results/results.csv, and the bonus results are in results/bonus.csv. The plots are in results/plots. The report explains the algorithms, complexity and measured results.
 
 ## Plots
 
-The finished plots are already in `results/plots`. To rebuild them, install Python 3.10 or newer and run:
+The three plots are already included. To rebuild them with Python 3.10 or newer:
 
 ```sh
 python -m pip install -r scripts/requirements.txt
 python scripts/plots.py
 ```
 
-The script also prints the ratios and slopes used in the report. Times change between runs; the reference results must remain identical.
+The script also prints the ratios and slopes from the report.
 
-## GitHub
+## Project structure
 
-`git-history.bundle` stores the Git history, feature branches and v1.0 tag. Recover it and push to your own new empty GitHub repository:
+- src/main/java/graph - Graph and Edge
+- src/main/java/algorithms - graph algorithms and DSU
+- src/main/java/metrics - operation counters
+- src/main/java/benchmark - generator and program entry points
+- src/test/java/tests - JUnit 5 tests
+- data - small input graphs
+- results - CSV files and plots
+- REPORT.pdf - report
+
+## Git history
+
+The project has main and the five required feature branches, with the final version tagged v1.0. The history is also saved in git-history.bundle.
+
+To restore it:
 
 ```sh
 git clone git-history.bundle city-network
-cd city-network
-git remote set-url origin https://github.com/YOUR_ACCOUNT/YOUR_REPOSITORY.git
-git push -u origin main
-git push origin 'refs/remotes/origin/feature/*:refs/heads/feature/*'
-git push origin v1.0
 ```
 
-Replace the example URL with your actual repository URL and include that link in Moodle. GitHub publication has not been completed.
+The repository still needs to be published to GitHub before submission.
 
 ## AI use
 
-OpenAI ChatGPT assisted with the code, tests, benchmarks and report. Results were checked against independent reference methods and the assignment's reference values.
+I used ChatGPT to help with the code, tests and report.
