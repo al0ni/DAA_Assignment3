@@ -77,7 +77,3 @@ The script also prints the ratios and slopes from the report.
 ## Git history
 
 The branches are main, feature/dsu, feature/mst, feature/scc, feature/paths and feature/metrics. The release tag is v1.0.
-
-## AI use
-
-I used ChatGPT to help with the code, tests and report.
